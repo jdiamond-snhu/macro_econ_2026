@@ -1,4 +1,4 @@
-import streamlit as st
+code_str = """import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -247,3 +247,10 @@ if selected_countries:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
     st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
+"""
+
+# Let's count the lines and find line 248 to see what is going on.
+lines = code_str.split('\n')
+for idx, line in enumerate(lines):
+    if idx + 1 >= 240 and idx + 1 <= 255:
+        print(f"{idx+1}: {line}")
