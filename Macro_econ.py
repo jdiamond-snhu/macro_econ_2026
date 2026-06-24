@@ -74,17 +74,21 @@ st.sidebar.header("Simulation Settings")
 principal = st.sidebar.number_input("Starting Cash ($)", min_value=1.0, value=1000.0, step=100.0)
 years = st.sidebar.slider("Timeline (Years)", min_value=1, max_value=30, value=15)
 
-# DYNAMIC OVERRIDE: Check selection and filter down default list instantly
+# DYNAMIC OVERRIDE & DISABLE: Blank defaults for standard modes, locked for Volcker era
 available_countries = list(COUNTRY_DATA.keys())
 if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
     default_selection = ["United States"]
+    is_disabled = True
 else:
-    default_selection = ["United States", "Canada", "Japan"]
+    default_selection = []  # Starts completely empty
+    is_disabled = False
 
 selected_countries = st.sidebar.multiselect(
     "Compare Regions:",
     options=available_countries,
-    default=default_selection
+    default=default_selection,
+    disabled=is_disabled,
+    help="Select one or more countries to plot. This field is locked to the U.S. during the Reagan-Volcker era."
 )
 
 # STEP 3: Federal Funds Rate Yield Optimizer Input (Defines fed_rate BEFORE the graph)
@@ -200,4 +204,5 @@ if selected_countries:
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
+    # App starts clean with this warning block until selection is made
     st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
