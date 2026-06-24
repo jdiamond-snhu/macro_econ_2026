@@ -219,8 +219,8 @@ if selected_countries:
             ))
             
         # Configure layout properties to manage dual-axis rendering engine layers cleanly
-        fig.update_layout()
-        title=f"Macro Wave: Currency Value vs. Raw Fed Interest Rate Movement",
+        fig.update_layout(
+            title=f"Macro Wave: Currency Value vs. Raw Fed Interest Rate Movement",
             xaxis_title="Years Elapsed",
             
             # Left Axis Parameters
@@ -242,4 +242,3 @@ if selected_countries:
             ),
             hovermode="x unified",
             template="plotly_white"
-
