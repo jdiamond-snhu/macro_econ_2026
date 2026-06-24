@@ -235,7 +235,7 @@ if selected_countries:
                 anchor="x",
                 overlaying="y", 
                 side="right", 
-                range=[0, 22]  # REPAIRED: This closes the parameters safely!
+                range=[0, 22]  # Closes parameter definition window safely
             ),
             hovermode="x unified",
             template="plotly_white"
