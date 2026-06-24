@@ -181,7 +181,8 @@ if selected_countries:
         })
 
     if active_countries_to_graph:
-        fig = go.Figure()
+        # Create figure template explicitly to avoid canvas layout compilation collisions
+        fig = go.Figure(layout=go.Layout(template="plotly_white"))
         
         # Generate Raw Rate Trend Values
         if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
@@ -220,7 +221,6 @@ if selected_countries:
         fig.update_layout(
             title=f"Macro Wave: Currency Value vs. Fed Debt Yield Benchmarks",
             xaxis_title="Years Elapsed",
-            
             # Left Axis Parameters
             yaxis=dict(
                 title="Purchasing Power Value ($)",
@@ -236,8 +236,7 @@ if selected_countries:
                 overlaying="y", 
                 side="right"
             ),
-            hovermode="x unified",
-            template="plotly_white"
+            hovermode="x unified"
         )
         
         st.plotly_chart(fig, use_container_width=True)
@@ -247,4 +246,3 @@ if selected_countries:
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
-    st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
