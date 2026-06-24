@@ -73,7 +73,7 @@ st.sidebar.markdown("---")
 st.sidebar.header("Simulation Settings")
 principal = st.sidebar.number_input("Starting Cash ($)", min_value=1.0, value=1000.0, step=100.0)
 
-# DYNAMIC TIMELINE CONFIGURATION: Snap and lock slider during the Volcker era
+# DYNAMIC CONFIGURATION MATRIX: Snap fields tightly during the Volcker era
 if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
     default_years = 9
     slider_disabled = True
@@ -82,7 +82,7 @@ if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
 else:
     default_years = 15
     slider_disabled = False
-    default_selection = []  # Starts completely empty
+    default_selection = []  
     multiselect_disabled = False
 
 years = st.sidebar.slider(
@@ -102,21 +102,25 @@ selected_countries = st.sidebar.multiselect(
     help="Select one or more countries to plot. This field is locked to the U.S. during the Reagan-Volcker era."
 )
 
-# STEP 3: Federal Funds Rate Yield Optimizer Input (Defines fed_rate BEFORE the graph)
+# STEP 3: Federal Funds Rate Yield Optimizer Input Block
 st.markdown("---")
 st.header("🦅 Federal Funds Rate Yield Optimizer")
 st.markdown("Calculate how earning an interest rate tied to the central bank counteracts inflation decay.")
 
+# Lock/Adjust target numeric widget default if Volcker era is active
+default_fed_input = 11.20 if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)" else 3.63
+
 fed_rate = st.number_input(
-    "Current Effective Federal Funds Rate (%)", 
+    "Effective Federal Funds Rate (%)", 
     min_value=0.0, 
-    max_value=20.0, 
-    value=3.63, 
+    max_value=25.0, 
+    value=default_fed_input, 
     step=0.25,
-    help="The sticker interest rate banks use, which influences high-yield savings and T-Bills."
+    disabled=slider_disabled, # Lock manual entry during Volcker tracking to prioritize historical curve
+    help="The baseline interest rate set by the central bank."
 )
 
-# STEP 4: Calculations & Modeling Logic (Safe to use rate_key and fed_rate now)
+# STEP 4: Calculations & Modeling Logic
 us_inflation = COUNTRY_DATA["United States"][rate_key]
 real_interest_rate = fed_rate - us_inflation
 
@@ -149,7 +153,7 @@ st.info(
     f"your true adjusted purchasing power over time preserves to **${true_purchasing_power_yield:,.2f}**."
 )
 
-# STEP 5: Render Interactive Chart Interface with Thin Green Line
+# STEP 5: Render Interactive Chart Interface with Dual-Axes Configuration
 if selected_countries:
     time_steps = list(range(0, years + 1))
     df_plot = pd.DataFrame({"Year": time_steps})
@@ -179,40 +183,63 @@ if selected_countries:
     if active_countries_to_graph:
         fig = go.Figure()
         
-        # Add the Thin Green Fed Interest Rate Line
-        raw_interest_growth = [principal * ((1 + (fed_rate / 100)) ** t) for t in time_steps]
+        # --- THE HOOK: Generate Raw Rate Trend Values ---
+        if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
+            # Map actual historical path across the 9 years (1979=11.2%, 1980=13.4%, 1981=19.1%, down to 1987=6.0%)
+            fed_rate_path = [11.20, 13.35, 19.10, 12.26, 9.09, 10.23, 8.10, 6.83, 6.43, 6.05]
+            # Clip array length safely to exactly match our time step slice array
+            fed_rate_path = fed_rate_path[:len(time_steps)]
+            legend_label = "🦅 Historical Fed Funds Path"
+        else:
+            # Standard flat line if using policy benchmarks
+            fed_rate_path = [fed_rate] * len(time_steps)
+            legend_label = f"🦅 Selected Fed Benchmark ({fed_rate}%)"
+
+        # Add the Thin Solid Green Rate Line mapped precisely to the Secondary Right Axis
         fig.add_trace(go.Scatter(
             x=time_steps,
-            y=raw_interest_growth,
+            y=fed_rate_path,
             mode='lines',
-            name=f"🦅 Raw Fed Cash Yield ({fed_rate}%)",
-            line=dict(color='#2ecc71', width=1.5, dash='dash'),
-            hovertemplate="<b>Raw Fed Yield</b><br>Year %{x}: $%{y:,.2f}<extra></extra>"
+            name=legend_label,
+            line=dict(color='#2ecc71', width=2.0), # Thin solid green trace
+            yaxis="y2", # Map explicitly to the secondary y-axis coordinate frame
+            hovertemplate="<b>%{text}</b><br>Year %{x}: %{y:.2f}%<extra></extra>",
+            text=[legend_label] * len(time_steps)
         ))
 
-        # Add the country inflation lines
+        # Add the standard country currency breakdown line charts to the Primary Left Axis
         for country in active_countries_to_graph:
             current_rate = COUNTRY_DATA[country][rate_key]
             fig.add_trace(go.Scatter(
                 x=df_plot["Year"], 
                 y=df_plot[country], 
                 mode='lines+markers', 
-                name=f"{COUNTRY_DATA[country]['flag']} {country} ({current_rate}%)"
+                name=f"{COUNTRY_DATA[country]['flag']} {country} ({current_rate}%)",
+                yaxis="y" # Maps strictly onto Left Axis scale
             ))
             
+        # Configure layout properties to manage dual-axis rendering engine layers cleanly
         fig.update_layout(
-            title=f"Decay of ${principal:,.2f} Cash vs. Raw Fed Interest Yield over {years} Years",
-            xaxis_title="Years Compounded Forward",
-            yaxis_title="Value / Purchasing Power ($)",
+            title=f"Macro Wave: Currency Value vs. Raw Fed Interest Rate Movement",
+            xaxis_title="Years Elapsed",
+            
+            # Left Axis Parameters
+            yaxis=dict(
+                title="Purchasing Power Value ($)",
+                titlefont=dict(color="#1f77b4"),
+                tickfont=dict(color="#1f77b4"),
+                template="plotly_white"
+            ),
+            # Right Axis Parameters
+            yaxis2=dict(
+                title="Raw Federal Funds Interest Rate (%)",
+                titlefont=dict(color="#2ecc71"),
+                tickfont=dict(color="#2ecc71"),
+                anchor="x",
+                overlaying="y", # Overlay on top of primary graph footprint space safely
+                side="right", # Pin neatly onto right side panel area
+                range=[0, 22] # Give ample ceiling room for the 19.1% peak limits
+            ),
             hovermode="x unified",
             template="plotly_white"
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
-        
-        st.subheader(f"📊 Summary Analysis: {selected_era}")
-        st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
-    else:
-        st.error("No historical data available for the selected regions during this precise macroeconomic era.")
-else:
-    st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
+
