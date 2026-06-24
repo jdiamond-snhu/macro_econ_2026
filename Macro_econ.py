@@ -76,10 +76,10 @@ years = st.sidebar.slider("Timeline (Years)", min_value=1, max_value=30, value=1
 
 # DYNAMIC OVERRIDE: Check selection and filter down default list instantly
 available_countries = list(COUNTRY_DATA.keys())
-if selected_era == "🦅 Reagan-Volcker Era (1979–1987)":
+if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
     default_selection = ["United States"]
 else:
-    default_selection = [""]
+    default_selection = ["United States", "Canada", "Japan"]
 
 selected_countries = st.sidebar.multiselect(
     "Compare Regions:",
