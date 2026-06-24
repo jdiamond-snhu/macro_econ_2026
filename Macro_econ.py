@@ -1,67 +1,14 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-st.markdown("---")
-st.header("🦅 Federal Funds Rate Yield Optimizer")
-st.markdown("Calculate how earning an interest rate tied to the central bank counteracts inflation decay.")
 
-# 1. Real-time Fed Rate Parameter Input
-fed_rate = st.number_input(
-    "Current Effective Federal Funds Rate (%)", 
-    min_value=0.0, 
-    max_value=20.0, 
-    value=3.63, # Current mid-2026 effective rate baseline
-    step=0.25,
-    help="The sticker interest rate banks use, which influences high-yield savings and T-Bills."
-)
-
-# Use the United States data contextually from our existing selected simulation configuration
-us_inflation = COUNTRY_DATA["United States"][rate_key]
-
-# 2. Mathematical Modeling equations
-real_interest_rate = fed_rate - us_inflation
-
-# Compute compounded forward outcomes over the user's selected timeframe
-cash_only = principal / ((1 + (us_inflation / 100)) ** years)
-yield_protected_cash = principal * ((1 + (real_interest_rate / 100)) ** years)
-nominal_savings_growth = principal * ((1 + (fed_rate / 100)) ** years)
-true_purchasing_power_yield = nominal_savings_growth / ((1 + (us_inflation / 100)) ** years)
-
-# 3. Render Visual KPI Cards
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric(
-        label="U.S. Inflation Rate Context", 
-        value=f"{us_inflation}%"
-    )
-with col2:
-    st.metric(
-        label="Net Real Interest Rate (Fisher Matrix)", 
-        value=f"{real_interest_rate:.2f}%",
-        delta=f"Positive Yield" if real_interest_rate >= 0 else "Negative Purchasing Drag",
-        delta_color="normal" if real_interest_rate >= 0 else "inverse"
-    )
-with col3:
-    st.metric(
-        label="Final True Purchasing Power", 
-        value=f"${true_purchasing_power_yield:,.2f}",
-        delta=f"${true_purchasing_power_yield - cash_only:,.2f} Saved vs Pure Cash"
-    )
-
-# 4. Explanatory Context Data block
-st.info(
-    f"💡 **Analysis Footnote:** If you leave ${principal:,.2f} in a vault without yield, inflation reduces its value "
-    f"to **${cash_only:,.2f}** in {years} years. However, by harvesting a **{fed_rate}%** Fed-linked nominal interest rate, "
-    f"your true adjusted purchasing power over time preserves to **${true_purchasing_power_yield:,.2f}**."
-)
 # Set up page configurations
 st.set_page_config(page_title="Global Inflation Analytics", layout="wide")
 
 st.title("🌐 Global Inflation Simulator & Macro Era Tracker")
 st.markdown("Analyze how purchasing power decays under distinct economic regimes and historical eras.")
 
-# 1. Multi-Era Macroeconomic Database 
+# STEP 1: Multi-Era Macroeconomic Database 
 COUNTRY_DATA = {
     "United States": {
         "flag": "🇺🇸",
@@ -100,7 +47,7 @@ COUNTRY_DATA = {
     }
 }
 
-# 2. Sidebar Navigation & Macro Era Selection Buttons
+# STEP 2: Sidebar Navigation & Macro Era Selection (Defines rate_key FIRST)
 st.sidebar.header("Economic Era Profiles")
 selected_era = st.sidebar.radio(
     "Choose a Regime View:",
@@ -133,7 +80,54 @@ selected_countries = st.sidebar.multiselect(
     default=["United States", "Canada", "Japan"]
 )
 
-# 3. Calculation & Modeling Logic
+# STEP 3: Federal Funds Rate Yield Optimizer Input (Defines fed_rate BEFORE the graph)
+st.markdown("---")
+st.header("🦅 Federal Funds Rate Yield Optimizer")
+st.markdown("Calculate how earning an interest rate tied to the central bank counteracts inflation decay.")
+
+fed_rate = st.number_input(
+    "Current Effective Federal Funds Rate (%)", 
+    min_value=0.0, 
+    max_value=20.0, 
+    value=3.63, 
+    step=0.25,
+    help="The sticker interest rate banks use, which influences high-yield savings and T-Bills."
+)
+
+# STEP 4: Calculations & Modeling Logic (Safe to use rate_key and fed_rate now)
+us_inflation = COUNTRY_DATA["United States"][rate_key]
+real_interest_rate = fed_rate - us_inflation
+
+# Compute compounded forward outcomes over the user's selected timeframe
+cash_only = principal / ((1 + (us_inflation / 100)) ** years)
+nominal_savings_growth = principal * ((1 + (fed_rate / 100)) ** years)
+true_purchasing_power_yield = nominal_savings_growth / ((1 + (us_inflation / 100)) ** years)
+
+# Render Visual KPI Cards
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric(label="U.S. Inflation Rate Context", value=f"{us_inflation}%")
+with col2:
+    st.metric(
+        label="Net Real Interest Rate (Fisher Matrix)", 
+        value=f"{real_interest_rate:.2f}%",
+        delta="Positive Yield" if real_interest_rate >= 0 else "Negative Purchasing Drag",
+        delta_color="normal" if real_interest_rate >= 0 else "inverse"
+    )
+with col3:
+    st.metric(
+        label="Final True Purchasing Power", 
+        value=f"${true_purchasing_power_yield:,.2f}",
+        delta=f"${true_purchasing_power_yield - cash_only:,.2f} Saved vs Pure Cash"
+    )
+
+st.info(
+    f"💡 **Analysis Footnote:** If you leave ${principal:,.2f} in a vault without yield, inflation reduces its value "
+    f"to **${cash_only:,.2f}** in {years} years. However, by harvesting a **{fed_rate}%** Fed-linked nominal interest rate, "
+    f"your true adjusted purchasing power over time preserves to **${true_purchasing_power_yield:,.2f}**."
+)
+
+# STEP 5: Render Interactive Chart Interface with Thin Green Line
 if selected_countries:
     time_steps = list(range(0, years + 1))
     df_plot = pd.DataFrame({"Year": time_steps})
@@ -142,14 +136,10 @@ if selected_countries:
     
     for country in selected_countries:
         rate = COUNTRY_DATA[country][rate_key]
-        
-        # Guard clause if data is unavailable for that specific historical era
         if rate is None:
             continue
             
         active_countries_to_graph.append(country)
-        
-        # Exponential compounding decay curve math
         purchasing_power = [principal / ((1 + (rate / 100)) ** t) for t in time_steps]
         df_plot[country] = purchasing_power
         
@@ -164,25 +154,21 @@ if selected_countries:
             "Historical Context / Footnote": COUNTRY_DATA[country]["notes"]
         })
 
-      # 4. Render Interactive Chart Interface
     if active_countries_to_graph:
         fig = go.Figure()
         
-        # --- NEW CODE BLOCK: The Thin Green Fed Interest Rate Line ---
-        # Compounding formula for raw interest: Principal * (1 + rate)^t
+        # Add the Thin Green Fed Interest Rate Line
         raw_interest_growth = [principal * ((1 + (fed_rate / 100)) ** t) for t in time_steps]
-        
         fig.add_trace(go.Scatter(
             x=time_steps,
             y=raw_interest_growth,
             mode='lines',
             name=f"🦅 Raw Fed Cash Yield ({fed_rate}%)",
-            line=dict(color='#2ecc71', width=1.5, dash='dash'), # Thin, dashed green line
+            line=dict(color='#2ecc71', width=1.5, dash='dash'),
             hovertemplate="<b>Raw Fed Yield</b><br>Year %{x}: $%{y:,.2f}<extra></extra>"
         ))
-        # --- END OF NEW CODE BLOCK ---
 
-        # Existing loop for tracking country inflation decay
+        # Add the country inflation lines
         for country in active_countries_to_graph:
             current_rate = COUNTRY_DATA[country][rate_key]
             fig.add_trace(go.Scatter(
@@ -202,11 +188,9 @@ if selected_countries:
         
         st.plotly_chart(fig, use_container_width=True)
         
-        # 5. Display KPI Summary Table
         st.subheader(f"📊 Summary Analysis: {selected_era}")
         st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
-
 else:
     st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
