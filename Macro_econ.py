@@ -47,16 +47,19 @@ COUNTRY_DATA = {
     }
 }
 
-# STEP 2: Sidebar Navigation & Macro Era Selection (Defines rate_key FIRST)
-st.sidebar.header("Economic Era Profiles")
-selected_era = st.sidebar.radio(
-    "Choose a Regime View:",
-    options=[
-        "Official Central Bank Target", 
-        "Standard Financial Planning Baseline (2.5%)", 
-        "💥 Pandemic Era Shock (2020–2026)", 
-        "🦅 Reagan-Volcker Regime (1979–1987)"
-    ]
+# Standard country multi-select input
+available_countries = list(COUNTRY_DATA.keys())
+
+# Dynamic Default logic: If Reagan-Volcker is picked, default ONLY to United States
+if selected_era == "🦅 Reagan-Volcker Era (1979–1987)":
+    default_selection = ["United States"]
+else:
+    default_selection = ["United States", "Canada", "Japan"]
+
+selected_countries = st.sidebar.multiselect(
+    "Compare Regions:",
+    options=available_countries,
+    default=default_selection
 )
 
 # Map human-readable labels to our python keys
