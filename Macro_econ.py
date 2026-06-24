@@ -246,3 +246,4 @@ if selected_countries:
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
+    st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
