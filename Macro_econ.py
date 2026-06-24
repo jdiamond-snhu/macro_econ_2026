@@ -72,22 +72,33 @@ rate_key = era_mapping[selected_era]
 st.sidebar.markdown("---")
 st.sidebar.header("Simulation Settings")
 principal = st.sidebar.number_input("Starting Cash ($)", min_value=1.0, value=1000.0, step=100.0)
-years = st.sidebar.slider("Timeline (Years)", min_value=1, max_value=30, value=15)
 
-# DYNAMIC OVERRIDE & DISABLE: Blank defaults for standard modes, locked for Volcker era
-available_countries = list(COUNTRY_DATA.keys())
+# DYNAMIC TIMELINE CONFIGURATION: Snap and lock slider during the Volcker era
 if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
+    default_years = 9
+    slider_disabled = True
     default_selection = ["United States"]
-    is_disabled = True
+    multiselect_disabled = True
 else:
+    default_years = 15
+    slider_disabled = False
     default_selection = []  # Starts completely empty
-    is_disabled = False
+    multiselect_disabled = False
+
+years = st.sidebar.slider(
+    "Timeline (Years)", 
+    min_value=1, 
+    max_value=30, 
+    value=default_years,
+    disabled=slider_disabled,
+    help="Timeline is locked to exactly 9 years (1979–1987) during the Reagan-Volcker era."
+)
 
 selected_countries = st.sidebar.multiselect(
     "Compare Regions:",
-    options=available_countries,
+    options=list(COUNTRY_DATA.keys()),
     default=default_selection,
-    disabled=is_disabled,
+    disabled=multiselect_disabled,
     help="Select one or more countries to plot. This field is locked to the U.S. during the Reagan-Volcker era."
 )
 
@@ -204,5 +215,4 @@ if selected_countries:
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
-    # App starts clean with this warning block until selection is made
     st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
