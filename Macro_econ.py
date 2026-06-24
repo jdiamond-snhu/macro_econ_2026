@@ -47,19 +47,16 @@ COUNTRY_DATA = {
     }
 }
 
-# Standard country multi-select input
-available_countries = list(COUNTRY_DATA.keys())
-
-# Dynamic Default logic: If Reagan-Volcker is picked, default ONLY to United States
-if selected_era == "🦅 Reagan-Volcker Era (1979–1987)":
-    default_selection = ["United States"]
-else:
-    default_selection = ["United States", "Canada", "Japan"]
-
-selected_countries = st.sidebar.multiselect(
-    "Compare Regions:",
-    options=available_countries,
-    default=default_selection
+# STEP 2: Sidebar Navigation & Macro Era Selection (Defines rate_key FIRST)
+st.sidebar.header("Economic Era Profiles")
+selected_era = st.sidebar.radio(
+    "Choose a Regime View:",
+    options=[
+        "Official Central Bank Target", 
+        "Standard Financial Planning Baseline (2.5%)", 
+        "💥 Pandemic Era Shock (2020–2026)", 
+        "🦅 Reagan-Volcker Regime (1979–1987)"
+    ]
 )
 
 # Map human-readable labels to our python keys
@@ -77,10 +74,17 @@ st.sidebar.header("Simulation Settings")
 principal = st.sidebar.number_input("Starting Cash ($)", min_value=1.0, value=1000.0, step=100.0)
 years = st.sidebar.slider("Timeline (Years)", min_value=1, max_value=30, value=15)
 
+# DYNAMIC OVERRIDE: Check selection and filter down default list instantly
+available_countries = list(COUNTRY_DATA.keys())
+if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
+    default_selection = ["United States"]
+else:
+    default_selection = ["United States", "Canada", "Japan"]
+
 selected_countries = st.sidebar.multiselect(
     "Compare Regions:",
-    options=list(COUNTRY_DATA.keys()),
-    default=["United States", "Canada", "Japan"]
+    options=available_countries,
+    default=default_selection
 )
 
 # STEP 3: Federal Funds Rate Yield Optimizer Input (Defines fed_rate BEFORE the graph)
