@@ -1,4 +1,4 @@
-code_str = """import streamlit as st
+import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
@@ -116,7 +116,7 @@ fed_rate = st.number_input(
     max_value=25.0, 
     value=default_fed_input, 
     step=0.25,
-    disabled=slider_disabled, # Lock manual entry during Volcker tracking to prioritize historical curve
+    disabled=slider_disabled,
     help="The baseline interest rate set by the central bank."
 )
 
@@ -181,12 +181,9 @@ if selected_countries:
         })
 
     if active_countries_to_graph:
-        # Create figure template explicitly to avoid canvas layout compilation collisions
         fig = go.Figure(layout=go.Layout(template="plotly_white"))
         
-        # Generate Raw Rate Trend Values
         if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
-            # Map actual historical path across the 9 years (1979=11.2%, 1980=13.4%, 1981=19.1%, down to 1987=6.0%)
             fed_rate_path = [11.20, 13.35, 19.10, 12.26, 9.09, 10.23, 8.10, 6.83, 6.43, 6.05]
             fed_rate_path = fed_rate_path[:len(time_steps)]
             legend_label = "🦅 Historical Fed Funds Debt Benchmark (T-Bills)"
@@ -194,7 +191,6 @@ if selected_countries:
             fed_rate_path = [fed_rate] * len(time_steps)
             legend_label = f"🦅 Fed Debt Yield Benchmark ({fed_rate}%)"
 
-        # Add the Thin Solid Green Rate Line mapped precisely to the Secondary Right Axis
         fig.add_trace(go.Scatter(
             x=time_steps,
             y=fed_rate_path,
@@ -206,7 +202,6 @@ if selected_countries:
             text=[legend_label] * len(time_steps)
         ))
 
-        # Add the standard country currency breakdown line charts to the Primary Left Axis
         for country in active_countries_to_graph:
             current_rate = COUNTRY_DATA[country][rate_key]
             fig.add_trace(go.Scatter(
@@ -217,17 +212,14 @@ if selected_countries:
                 yaxis="y"
             ))
             
-        # Configure layout properties to manage dual-axis rendering layers cleanly
         fig.update_layout(
             title=f"Macro Wave: Currency Value vs. Fed Debt Yield Benchmarks",
             xaxis_title="Years Elapsed",
-            # Left Axis Parameters
             yaxis=dict(
                 title="Purchasing Power Value ($)",
                 titlefont=dict(color="#1f77b4"),
                 tickfont=dict(color="#1f77b4")
             ),
-            # Right Axis Parameters
             yaxis2=dict(
                 title="Federal Funds Yield Benchmark / Debt Rate (%)",
                 titlefont=dict(color="#2ecc71"),
@@ -247,10 +239,3 @@ if selected_countries:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
     st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
-"""
-
-# Let's count the lines and find line 248 to see what is going on.
-lines = code_str.split('\n')
-for idx, line in enumerate(lines):
-    if idx + 1 >= 240 and idx + 1 <= 255:
-        print(f"{idx+1}: {line}")
