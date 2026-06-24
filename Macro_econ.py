@@ -234,8 +234,7 @@ if selected_countries:
                 tickfont=dict(color="#2ecc71"),
                 anchor="x",
                 overlaying="y", 
-                side="right", 
-                range=[0, 22]  # Closes parameter definition window safely
+                side="right"
             ),
             hovermode="x unified",
             template="plotly_white"
@@ -248,3 +247,4 @@ if selected_countries:
     else:
         st.error("No historical data available for the selected regions during this precise macroeconomic era.")
 else:
+    st.warning("Please select at least one region from the sidebar menu to start mapping the graph.")
