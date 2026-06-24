@@ -183,17 +183,15 @@ if selected_countries:
     if active_countries_to_graph:
         fig = go.Figure()
         
-        # --- THE HOOK: Generate Raw Rate Trend Values ---
+        # Generate Raw Rate Trend Values
         if selected_era == "🦅 Reagan-Volcker Regime (1979–1987)":
             # Map actual historical path across the 9 years (1979=11.2%, 1980=13.4%, 1981=19.1%, down to 1987=6.0%)
             fed_rate_path = [11.20, 13.35, 19.10, 12.26, 9.09, 10.23, 8.10, 6.83, 6.43, 6.05]
-            # Clip array length safely to exactly match our time step slice array
             fed_rate_path = fed_rate_path[:len(time_steps)]
-            legend_label = "🦅 Historical Fed Funds Path"
+            legend_label = "🦅 Historical Fed Funds Debt Benchmark (T-Bills)"
         else:
-            # Standard flat line if using policy benchmarks
             fed_rate_path = [fed_rate] * len(time_steps)
-            legend_label = f"🦅 Selected Fed Benchmark ({fed_rate}%)"
+            legend_label = f"🦅 Fed Debt Yield Benchmark ({fed_rate}%)"
 
         # Add the Thin Solid Green Rate Line mapped precisely to the Secondary Right Axis
         fig.add_trace(go.Scatter(
@@ -201,8 +199,8 @@ if selected_countries:
             y=fed_rate_path,
             mode='lines',
             name=legend_label,
-            line=dict(color='#2ecc71', width=2.0), # Thin solid green trace
-            yaxis="y2", # Map explicitly to the secondary y-axis coordinate frame
+            line=dict(color='#2ecc71', width=2.0),
+            yaxis="y2", 
             hovertemplate="<b>%{text}</b><br>Year %{x}: %{y:.2f}%<extra></extra>",
             text=[legend_label] * len(time_steps)
         ))
@@ -215,30 +213,38 @@ if selected_countries:
                 y=df_plot[country], 
                 mode='lines+markers', 
                 name=f"{COUNTRY_DATA[country]['flag']} {country} ({current_rate}%)",
-                yaxis="y" # Maps strictly onto Left Axis scale
+                yaxis="y"
             ))
             
-        # Configure layout properties to manage dual-axis rendering engine layers cleanly
+        # Configure layout properties to manage dual-axis rendering layers cleanly
         fig.update_layout(
-            title=f"Macro Wave: Currency Value vs. Raw Fed Interest Rate Movement",
+            title=f"Macro Wave: Currency Value vs. Fed Debt Yield Benchmarks",
             xaxis_title="Years Elapsed",
             
             # Left Axis Parameters
             yaxis=dict(
                 title="Purchasing Power Value ($)",
                 titlefont=dict(color="#1f77b4"),
-                tickfont=dict(color="#1f77b4"),
-                template="plotly_white"
+                tickfont=dict(color="#1f77b4")
             ),
             # Right Axis Parameters
             yaxis2=dict(
-                title="Raw Federal Funds Interest Rate (%)",
+                title="Federal Funds Yield Benchmark / Debt Rate (%)",
                 titlefont=dict(color="#2ecc71"),
                 tickfont=dict(color="#2ecc71"),
                 anchor="x",
-                overlaying="y", # Overlay on top of primary graph footprint space safely
-                side="right", # Pin neatly onto right side panel area
-                range=[0, 22] # Give ample ceiling room for the 19.1% peak limits
+                overlaying="y", 
+                side="right", 
+                range=[0, 22]  # REPAIRED: This closes the parameters safely!
             ),
             hovermode="x unified",
             template="plotly_white"
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.subheader(f"📊 Summary Analysis: {selected_era}")
+        st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
+    else:
+        st.error("No historical data available for the selected regions during this precise macroeconomic era.")
+else:
